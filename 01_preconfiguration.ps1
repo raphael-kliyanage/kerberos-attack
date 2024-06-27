@@ -32,3 +32,14 @@ Set-DnsClientServerAddress -InterfaceAlias $interface_name -ServerAddresses $dns
 # IPv6
 Disable-NetAdapterBinding -Name "*" -ComponentID ms_tcpip6 -Confirm:$false
 
+# choose to either rename or rename and join a domain in one go
+$renaming = 0
+while($renaming -ne 1) {
+    $choice = Read-Host "Would you like to join a domain? (y/n):    "
+    switch ($choice) {
+        "n" {Rename-Computer -ComputerName $env:COMPUTERNAME -NewName $computer_name -Restart; Break}
+        "y" {Add-Computer -ComputerName $env:COMPUTERNAME -DomainName $domain -NewName $computer_name -Restart; Break}
+        Default {"Please answer by either 'y' or 'n'!"}
+    }
+}
+
