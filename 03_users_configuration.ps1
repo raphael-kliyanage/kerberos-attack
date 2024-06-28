@@ -8,7 +8,7 @@
     deactivated and Generic rights are added.
 
 .EXAMPLE
-    .\01_users_configuration.ps1
+    .\03_users_configuration.ps1
 #>
 
 [String[]] $UserList = @(
