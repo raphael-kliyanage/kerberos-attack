@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Creating users in an Active Directory. Only used for 
+    Creating users in an Active Directory. 
 
 .DESCRIPTION
     This script creates three users and ask the administrator to enter their
