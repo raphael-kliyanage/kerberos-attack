@@ -4,10 +4,10 @@
 
 .DESCRIPTION
     This script remediates asreproast, kerberoast and RBCD attacks.
-    We tried to follow the ANSSI guidelines for passowrd policy:
+    We tried to follow the ANSSI guidelines for password policy:
     - R10: Lockout threshold
     - R21: Minimum password length
-    - R22: No Maximum password lenght
+    - R22: No Maximum password length
     - R23: Complex passwords
     - R24: No password expiration for unprivileged users
 
