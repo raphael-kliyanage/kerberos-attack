@@ -8,4 +8,3 @@ setspn.exe -S HTTP/FAKE01.ADTEST.LOCAL u_kerberoast
 
 # disable pre-authentication on u_asreproast
 Set-ADAccountControl -DoesNotRequirePreAuth $True -Identity u_asreproast
-
