@@ -34,7 +34,3 @@ Set-ADUser $UserList[0] `
 # Deactivate pre-authentication for u_asreproas user
 
 Set-ADAccountControl -DoesNotRequirePreAuth $True -Identity $UserList[1]
-
-# Add GenericAll rights to u_generic user 
-
-Add-ADPermission -User $UserList[3] -ExtendedRights 'GenericAll'
