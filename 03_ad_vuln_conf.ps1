@@ -21,3 +21,27 @@ setspn.exe -S HTTP/FAKE01.ADTEST.LOCAL u_kerberoast
 
 # disable pre-authentication on u_asreproast
 Set-ADAccountControl -DoesNotRequirePreAuth $True -Identity u_asreproast
+
+# Add GenericWrite for u_generic user on DC01
+Import-Module ActiveDirectory
+
+# Define the computer and user
+$computerName = "DC01"
+$user = "u_generic"
+
+# Get the current security descriptor of the computer object
+$computer = Get-ADComputer $computerName -Properties nTSecurityDescriptor
+$acl = $computer.nTSecurityDescriptor
+
+# Define the new access rule
+$identity = New-Object System.Security.Principal.NTAccount($user)
+$rights = [System.DirectoryServices.ActiveDirectoryRights]::GenericWrite
+$type = [System.Security.AccessControl.AccessControlType]::Allow
+$accessRule = New-Object System.DirectoryServices.ActiveDirectoryAccessRule($identity, $rights, $type)
+
+# Add the new access rule to the security descriptor
+$acl.AddAccessRule($accessRule)
+
+# Apply the modified security descriptor back to the computer object
+Set-ADComputer $computerName -Replace @{nTSecurityDescriptor=$acl}
+
