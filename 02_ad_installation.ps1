@@ -1,3 +1,16 @@
+# Name          : 02_ad_installation.ps1
+# Description   : Install ADDS & DNS
+# Param 1       : N/A
+# Param 2       : N/A
+#
+# Exemple       : .\02_ad_installation.ps1
+#
+# Author        : Mathis THOUVENIN, Raphaël KATHALUWA-LIYANAGE, Lyronn LEVY
+# Changelog     :
+# Version       : 1
+#
+#
+
 # Parameters
 $domainName = "EXAM.LOCAL"
 $domainNetBIOSName = "EXAM"
