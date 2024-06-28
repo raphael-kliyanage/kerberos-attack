@@ -41,8 +41,8 @@ New-ADFineGrainedPasswordPolicy `
 
 # Apply the password policy to a specific group
 
-Add-ADFineGrainedPasswordPolicySubject "PSO_ComptabiliteBis" `
- -Subjects "Comptabilité"
+Add-ADFineGrainedPasswordPolicySubject "PSO_BasicPasswordPolicy" `
+ -Subjects "MyGroup"
 
 # List all Password Settings Object
 
