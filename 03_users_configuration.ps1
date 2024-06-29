@@ -43,7 +43,7 @@ $computerName = "DC01"
 
 # Get the current security descriptor of the computer object
 $computer = Get-ADComputer $computerName -Properties nTSecurityDescriptor
-$acl = $computer.nTSecurityDescriptor
+$ace = $computer.nTSecurityDescriptor
 
 # Grant GenericWrite permission to u_generic user on DC01
 $identity = New-Object System.Security.Principal.NTAccount($UserList[2])
@@ -52,7 +52,11 @@ $type = [System.Security.AccessControl.AccessControlType]::Allow
 $accessRule = New-Object System.DirectoryServices.ActiveDirectoryAccessRule($identity, $rights, $type)
 
 # Add the new access rule to the security descriptor
-$acl.AddAccessRule($accessRule)
+$ace.AddAccessRule($accessRule)
 
 # Apply the modified security descriptor back to the computer object
-Set-ADComputer $computerName -Replace @{nTSecurityDescriptor=$acl}
+Set-ADComputer $computerName -Replace @{nTSecurityDescriptor=$ace}
+
+# updating the machine account of LPT01$ which acts as a compromised laptop
+# to generate tickets on behalf of DC01$
+net user 'LPT01$' 'P@ssw0rd' /domain
