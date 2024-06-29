@@ -31,6 +31,28 @@ foreach ($Item in $UserList) {
 Set-ADUser $UserList[0] `
  -ServicePrincipalNames @{Add="HTTP/FAKE01.ADTEST.LOCAL"}
 
-# Deactivate pre-authentication for u_asreproas user
+# Deactivate pre-authentication for u_asreproasting user
 
 Set-ADAccountControl -DoesNotRequirePreAuth $True -Identity $UserList[1]
+
+### Add GenericWrite for u_generic user on DC01
+Import-Module ActiveDirectory
+
+# Define the computer and user
+$computerName = "DC01"
+
+# Get the current security descriptor of the computer object
+$computer = Get-ADComputer $computerName -Properties nTSecurityDescriptor
+$acl = $computer.nTSecurityDescriptor
+
+# Grant GenericWrite permission to u_generic user on DC01
+$identity = New-Object System.Security.Principal.NTAccount($UserList[2])
+$rights = [System.DirectoryServices.ActiveDirectoryRights]::GenericWrite
+$type = [System.Security.AccessControl.AccessControlType]::Allow
+$accessRule = New-Object System.DirectoryServices.ActiveDirectoryAccessRule($identity, $rights, $type)
+
+# Add the new access rule to the security descriptor
+$acl.AddAccessRule($accessRule)
+
+# Apply the modified security descriptor back to the computer object
+Set-ADComputer $computerName -Replace @{nTSecurityDescriptor=$acl}
