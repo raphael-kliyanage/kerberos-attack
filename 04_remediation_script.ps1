@@ -134,3 +134,12 @@ foreach ($computer in $computers) {
         Write-Host "Keeping computer: $($computer.Name)"
     }
 }
+
+# Importing GPOs to apply a general and modern password policy
+# Only domain admins can add computers to the domain
+Write-Host "Importing GPOs..."
+Import-GPO -BackupGpoName 'Default Domain Policy' -TargetName 'Default Domain Policy' -path '.\gpo' -CreateIfNeeded:$true -Confirm:$false
+Import-GPO -BackupGpoName 'Default Domain Controllers Policy' -TargetName 'Default Domain Controllers Policy' -path '.\gpo' -CreateIfNeeded:$true -Confirm:$false
+
+# Applying the new GPOs
+gpupdate /force
