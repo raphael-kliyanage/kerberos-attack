@@ -21,7 +21,7 @@ $dns = "192.168.1.52,192.168.1.1"
 ### IP configuration
 # get interface name
 Get-NetAdapter | Select-Object ifIndex, Name, Description, MacAddress, Status
-$interface_name = Read-Host "Select the Name of the interface to configure"
+$interface_name = Read-Host "Select the Name of the interface to configure (e.g. `"Ethernet`")"
 
 # Remove the static ip
 Remove-NetIPAddress -InterfaceAlias $interface_name -Confirm:$false

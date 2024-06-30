@@ -28,7 +28,7 @@ $dns = "192.168.1.52,192.168.1.1"
 ### IP configuration
 # get interface name
 Get-NetAdapter | Select-Object ifIndex, Name, Description, MacAddress, Status
-$interface_name = Read-Host "Select the Name of the interface to configure"
+$interface_name = Read-Host "Select the Name of the interface to configure (e.g. `"Ethernet`")"
 
 # configuring new stattic DNS for IPv4
 Write-Host "Configuring DNS addresses..."
