@@ -69,3 +69,21 @@ Add-ADFineGrainedPasswordPolicySubject "PSO_AdminPasswordPolicy" `
 # List all Password Settings Object
 
 Get-ADFineGrainedPasswordPolicy -Filter *
+
+# RBCD
+# Display all computers properties with WriteProperty enabled
+
+[String[]] $ComputerList = @((Get-ADComputer -Filter * `
+| Select-Object "Name").Name)
+
+$ComputerProperty = foreach ($Item in $ComputerList) {
+
+    (Get-ADComputer -Identity $Item -Properties nTSecurityDescriptor `
+    | Select-Object -ExpandProperty nTSecurityDescriptor).Access `
+    | Select-Object "ActiveDirectoryRights","AccessControlType", `
+     "IdentityReference" `
+    | Where-Object -Property ActiveDirectoryRights -Match WriteProperty
+
+}
+
+Write-Output $ComputerProperty
