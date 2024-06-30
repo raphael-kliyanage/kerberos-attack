@@ -14,7 +14,7 @@
 .EXAMPLE
     .\04_remediation_script.ps1
 #>
-
+Import-Module ActiveDirectory
 # Asreproasting attack
 # List users with pre-authentication deactivated and disable this setting
 
@@ -70,20 +70,67 @@ Add-ADFineGrainedPasswordPolicySubject "PSO_AdminPasswordPolicy" `
 
 Get-ADFineGrainedPasswordPolicy -Filter *
 
-# RBCD
-# Display all computers properties with WriteProperty enabled
+### RBCD remediations
+# Get the list of all the ad computer objects
+$computers = Get-ADComputer -Filter *
 
-[String[]] $ComputerList = @((Get-ADComputer -Filter * `
-| Select-Object "Name").Name)
-
-$ComputerProperty = foreach ($Item in $ComputerList) {
-
-    (Get-ADComputer -Identity $Item -Properties nTSecurityDescriptor `
-    | Select-Object -ExpandProperty nTSecurityDescriptor).Access `
-    | Select-Object "ActiveDirectoryRights","AccessControlType", `
-     "IdentityReference" `
-    | Where-Object -Property ActiveDirectoryRights -Match WriteProperty
-
+### Clear the msDS-AllowedToActOnBehalfOfOtherIdentity for all computers
+foreach ($computer in $computers) {
+    Set-ADComputer -Identity $computer.DistinguishedName `
+        -Clear "msDS-AllowedToActOnBehalfOfOtherIdentity"
 }
 
-Write-Output $ComputerProperty
+# List of legitimate computers that must be kept
+$legit_computers = @("DC01", "LPT01")
+# List of non admin and legitimate users
+[String[]] $UserList = @(
+    'u_kerberoast',
+    'u_asreproast',
+    'u_generic'
+)
+
+foreach ($Item in $UserList) {
+    foreach($computer in $computers) {
+        # Get the current security descriptor of the computer object
+        $computer = Get-ADComputer $computer -Properties nTSecurityDescriptor
+        $ace = $computer.nTSecurityDescriptor
+
+        # Creating the GenericWrite permission to a user on a computer
+        $identity = New-Object System.Security.Principal.NTAccount($Item)
+        $rights = [System.DirectoryServices.ActiveDirectoryRights]::GenericWrite
+        $type = [System.Security.AccessControl.AccessControlType]::Allow
+        $accessRule = New-Object System.DirectoryServices.ActiveDirectoryAccessRule($identity, $rights, $type)
+
+        # Remove the GenericWrite ace on the computer
+        $ace.RemoveAccessRule($accessRule)
+
+        # Apply the modified security descriptor back to the computer object
+        Set-ADComputer $computer -Replace @{nTSecurityDescriptor=$ace}
+
+        # Creating the GenericAll permission to a user on a computer
+        $identity = New-Object System.Security.Principal.NTAccount($Item)
+        $rights = [System.DirectoryServices.ActiveDirectoryRights]::GenericAll
+        $type = [System.Security.AccessControl.AccessControlType]::Allow
+        $accessRule = New-Object System.DirectoryServices.ActiveDirectoryAccessRule($identity, $rights, $type)
+
+        # Remove the GenericAll ace on the computer
+        $ace.RemoveAccessRule($accessRule)
+
+        # Apply the modified security descriptor back to the computer object
+        Set-ADComputer $computer -Replace @{nTSecurityDescriptor=$ace}
+    }
+}
+
+# For safety reason (in the event of failures in the scripts)
+# unlegitimate computers will be deleted after clearing the attributes
+# and removing the ACEs
+foreach ($computer in $computers) {
+    # if not in the whitelist, delete the computer object
+    if ($legit_computers -notcontains $computer.Name.ToLower()) {
+        Write-Host "Deleting computer: $($computer.Name)"
+        Remove-ADComputer -Identity $computer.DistinguishedName `
+            -Confirm:$false
+    } else {
+        Write-Host "Keeping computer: $($computer.Name)"
+    }
+}
