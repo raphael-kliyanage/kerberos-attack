@@ -22,6 +22,8 @@ function Repair-Asreproasting {
 
     Get-ADUser -Filter 'DoesNotRequirePreAuth -eq $True' `
     | Set-ADAccountControl -DoesNotRequirePreAuth $False
+
+    Exit
 }
 
 function Repair-Kerberoasting {
@@ -73,6 +75,8 @@ function Repair-Kerberoasting {
     # List all Password Settings Object
 
     Get-ADFineGrainedPasswordPolicy -Filter *
+
+    Exit
 }
 
 function Repair-RBCD {
@@ -157,6 +161,8 @@ function Repair-RBCD {
 
     # Applying the new GPOs
     gpupdate /force
+
+    Exit
 }
 
 function Main-Function {
@@ -176,14 +182,13 @@ function Main-Function {
         $Choice = Read-Host "Please enter a number"
     }
 
-    $MenuFunction = @(
-    (Repair-Asreproasting),
-    (Repair-Kerberoasting),
-    (Repair-RBCD),
-    {Exit}
-    )
+    Switch ( $Choice ) {
+        1 { Repair-Asreproasting }
+        2 { Repair-Kerberoasting }
+        3 { Repair-RBCD }
+        4 { Exit }
+    }
 
-    $MenuFunction[$Choice - 1]
 }
 
 Main-Function
