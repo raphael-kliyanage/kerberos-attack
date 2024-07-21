@@ -14,6 +14,13 @@
 .EXAMPLE
     .\04_remediation_script.ps1
 #>
+# Ask for elevated permissions if required
+## Escalating privilege to run the script on Windows
+If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]'Administrator')) {
+    Start-Process powershell.exe -ArgumentList ("-NoProfile -ExecutionPolicy Bypass -File `"{0}`"" -f $PSCommandPath) -Verb RunAs
+    Exit
+}
+
 Import-Module ActiveDirectory
 
 function Repair-Asreproasting {
@@ -140,6 +147,21 @@ function Repair-RBCD {
             Write-Host "Keeping computer: $($computer.Name)"
         }
     }
+
+    # add privileged users in the Protected Users
+    Get-ADGroupMember "Administrateurs clés" | ForEach-Object {Add-ADGroupMember "Protected Users" $_ -Confirm:$false}
+    Get-ADGroupMember "Administrateurs clés Enterprise" | ForEach-Object {Add-ADGroupMember "Protected Users" $_ -Confirm:$false}
+    Get-ADGroupMember "Administrateurs de l’entreprise" | ForEach-Object {Add-ADGroupMember "Protected Users" $_ -Confirm:$false}
+    Get-ADGroupMember "Administrateurs du schéma" | ForEach-Object {Add-ADGroupMember "Protected Users" $_ -Confirm:$false}
+    Get-ADGroupMember "Admins du domaine" | ForEach-Object {Add-ADGroupMember "Protected Users" $_ -Confirm:$false}
+    Get-ADGroupMember "Propriétaires créateurs de la stratégie de groupe" | ForEach-Object {Add-ADGroupMember "Protected Users" $_ -Confirm:$false}
+    Get-ADGroupMember "Admins du domaine" | ForEach-Object {Add-ADGroupMember "Protected Users" $_ -Confirm:$false}
+
+    # Getting all the members of the Schema Admins to empty it
+    Get-ADGroupMember "Administrateurs du schéma" | ForEach-Object {Remove-ADGroupMember "Administrateurs du schéma" $_ -Confirm:$false}
+    
+    # Set all users with password never expires to false
+    Get-ADUser -Filter 'Name -like "*"' | ForEach-Object {Set-ADUser $_ -PasswordNeverExpires 0}
 
     # Importing GPOs to apply a general and modern password policy
     # Only domain admins can add computers to the domain
