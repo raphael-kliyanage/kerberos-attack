@@ -165,7 +165,7 @@ function Repair-RBCD {
     Exit
 }
 
-function Main-Function {
+function Main {
     [String[]] $MainMenu = @(
     '1: Fix Asreproasting',
     '2: Fix Kerberoasting',

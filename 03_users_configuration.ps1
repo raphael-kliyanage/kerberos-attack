@@ -10,7 +10,12 @@
 .EXAMPLE
     .\03_users_configuration.ps1
 #>
-
+# Ask for elevated permissions if required
+## Escalating privilege to run the script on Windows
+If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]'Administrator')) {
+    Start-Process powershell.exe -ArgumentList ("-NoProfile -ExecutionPolicy Bypass -File `"{0}`"" -f $PSCommandPath) -Verb RunAs
+    Exit
+}
 [String[]] $UserList = @(
     'u_kerberoast',
     'u_asreproast',
@@ -19,7 +24,7 @@
 
 foreach ($Item in $UserList) {
 
-        $SecurePassword = Read-Host "Enter a password for the user ` 
+        $SecurePassword = Read-Host "Enter a password for the user `
          ${Item}: " -AsSecureString -MaskInput 
         New-ADUser -Name $Item -AccountPassword $SecurePassword `
          -Enabled $True
