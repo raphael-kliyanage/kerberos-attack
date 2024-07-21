@@ -159,7 +159,7 @@ function Repair-RBCD {
     gpupdate /force
 }
 
-function Main-Function {
+function Main {
     [String[]] $MainMenu = @(
     '1: Fix Asreproasting',
     '2: Fix Kerberoasting',
