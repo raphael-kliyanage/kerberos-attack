@@ -16,10 +16,10 @@
 #>
 # Ask for elevated permissions if required
 ## Escalating privilege to run the script on Windows
-If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]'Administrator')) {
-    Start-Process powershell.exe -ArgumentList ("-NoProfile -ExecutionPolicy Bypass -File `"{0}`"" -f $PSCommandPath) -Verb RunAs
-    Exit
-}
+#If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]'Administrator')) {
+#    Start-Process powershell.exe -ArgumentList ("-NoProfile -ExecutionPolicy Bypass -File `"{0}`"" -f $PSCommandPath) -Verb RunAs
+#    Exit
+#}
 
 Import-Module ActiveDirectory
 
@@ -35,34 +35,11 @@ function Repair-Asreproasting {
 
 function Repair-Kerberoasting {
     # Kerberoasting
-    # Create a strong password policy for unprivileged users
-
-    New-ADFineGrainedPasswordPolicy `
-     -Name "PSO_UserPasswordPolicy" `
-     -DisplayName "PSO_UserPasswordPolicy" `
-     -Precedence 10 `
-     -MinPasswordLength 12 `
-     -PasswordHistoryCount 6 `
-     -ReversibleEncryptionEnabled $False `
-     -ComplexityEnabled $True `
-     -LockoutThreshold 3 `
-     -LockoutObservationWindow "0.01:00:00" `
-     -LockoutDuration "0.00:30:00" `
-     -MinPasswordAge "1.00:00:00" `
-     -MaxPasswordAge "0.00:00:00" `
-     -ProtectedFromAccidentalDeletion $True
-
-    # Apply the password policy to domain users
-
-    Add-ADFineGrainedPasswordPolicySubject "PSO_UserPasswordPolicy" `
-     -Subjects "Utilisateurs du domaine"
 
     # Create a strong password policy for privileged users
-
-    New-ADFineGrainedPasswordPolicy `
-     -Name "PSO_AdminPasswordPolicy" `
+    New-ADFineGrainedPasswordPolicy -Name "PSO_AdminPasswordPolicy" `
      -DisplayName "PSO_AdminPasswordPolicy" `
-     -Precedence 10 `
+     -Precedence 1 `
      -MinPasswordLength 16 `
      -PasswordHistoryCount 6 `
      -ReversibleEncryptionEnabled $False `
@@ -153,6 +130,7 @@ function Repair-RBCD {
     }
 
     # add privileged users in the Protected Users
+    # to be simplified with an array
     Get-ADGroupMember "Administrateurs clés" | ForEach-Object {Add-ADGroupMember "Protected Users" $_ -Confirm:$false}
     Get-ADGroupMember "Administrateurs clés Enterprise" | ForEach-Object {Add-ADGroupMember "Protected Users" $_ -Confirm:$false}
     Get-ADGroupMember "Administrateurs de l’entreprise" | ForEach-Object {Add-ADGroupMember "Protected Users" $_ -Confirm:$false}
@@ -209,8 +187,8 @@ function Main {
         2 { Repair-Kerberoasting }
         3 { Repair-RBCD }
         4 { Exit }
+        Default { Write-Output "Please select a number displayed on the screen" }
     }
-
 }
 
 Main
