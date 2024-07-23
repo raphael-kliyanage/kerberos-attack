@@ -53,6 +53,23 @@ function Repair-Kerberoasting {
 
     Get-ADFineGrainedPasswordPolicy -Filter *
 
+    # Importing GPOs to apply a general and modern password policy
+    # Only domain admins can add computers to the domain
+    Write-Host "Importing GPOs..."
+    Import-GPO -BackupGpoName 'Default Domain Policy' `
+     -TargetName 'Default Domain Policy' `
+     -path '.\gpo' `
+     -CreateIfNeeded:$true `
+     -Confirm:$false
+    Import-GPO -BackupGpoName 'Default Domain Controllers Policy' `
+     -TargetName 'Default Domain Controllers Policy' `
+     -path '.\gpo' `
+     -CreateIfNeeded:$true `
+     -Confirm:$false
+
+    # Applying the new GPOs
+    gpupdate /force
+
     Exit
 }
 
@@ -69,10 +86,17 @@ function Repair-RBCD {
 
     # List of legitimate computers that must be kept
     $legit_computers = @("DC01", "LPT01")
+    
     # List of non admin and legitimate users
     [String[]] $UserList = @(
         'u_kerberoast',
         'u_asreproast',
+        'u_generic'
+    )
+
+    # List of priviledge and legitimate users
+    [String[]] $AdminList = @(
+        'Administrateur',
         'u_generic'
     )
 
@@ -108,6 +132,11 @@ function Repair-RBCD {
         }
     }
 
+    # Adding priviledged users in the "Protected Users" group
+    foreach ($admin in $AdminList) {
+        Add-ADGroupMember -Identity "Protected Users" -Members $admin
+    }
+
     # For safety reason (in the event of failures in the scripts)
     # unlegitimate computers will be deleted after clearing the attributes
     # and removing the ACEs
@@ -122,23 +151,6 @@ function Repair-RBCD {
         }
     }
 
-    # Importing GPOs to apply a general and modern password policy
-    # Only domain admins can add computers to the domain
-    Write-Host "Importing GPOs..."
-    Import-GPO -BackupGpoName 'Default Domain Policy' `
-     -TargetName 'Default Domain Policy' `
-     -path '.\gpo' `
-     -CreateIfNeeded:$true `
-     -Confirm:$false
-    Import-GPO -BackupGpoName 'Default Domain Controllers Policy' `
-     -TargetName 'Default Domain Controllers Policy' `
-     -path '.\gpo' `
-     -CreateIfNeeded:$true `
-     -Confirm:$false
-
-    # Applying the new GPOs
-    gpupdate /force
-
     Exit
 }
 function Main {
@@ -149,21 +161,18 @@ function Main {
     '4: Quit program'
     )
 
-    # Display main menu
-    $MainMenu
-
-    $Choice = Read-Host "Please enter a number"
-    While (( $Choice -lt 1 ) -or ( $Choice -gt $MainMenu.Length)) {
-        Write-Output "Please select a number displayed on the screen"
+    $quit = 0
+    While ( $quit -ne 1 ) {
+        # Display main menu
+        $MainMenu
         $Choice = Read-Host "Please enter a number"
-    }
-
-    Switch ( $Choice ) {
-        1 { Repair-Asreproasting }
-        2 { Repair-Kerberoasting }
-        3 { Repair-RBCD }
-        4 { Exit }
-        Default { Write-Output "Please select a number displayed on the screen" }
+        Switch ( $Choice ) {
+            1 { Repair-Asreproasting; $quit = 1 }
+            2 { Repair-Kerberoasting; $quit = 1 }
+            3 { Repair-RBCD; $quit = 1 }
+            4 { Exit; $quit = 1  }
+            Default { Write-Output "Please select a number displayed on the screen" }
+        }
     }
 }
 
