@@ -91,8 +91,7 @@ function Repair-RBCD {
     foreach ($computer in $computers) {
         Set-ADComputer -Identity $computer.DistinguishedName `
             -Clear "msDS-AllowedToActOnBehalfOfOtherIdentity"
-        Write-Host "[-] Remove 'msDS-AllowedToActOnBehalfOfOtherIdentity' `
-         attribute on $($computer.Name)" -ForegroundColor Red
+        Write-Host "[-] Remove 'msDS-AllowedToActOnBehalfOfOtherIdentity' attribute on $($computer.Name)" -ForegroundColor Red
     }
 
     # List of legitimate computers that must be kept
