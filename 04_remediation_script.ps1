@@ -92,7 +92,7 @@ function Repair-RBCD {
         Set-ADComputer -Identity $computer.DistinguishedName `
             -Clear "msDS-AllowedToActOnBehalfOfOtherIdentity"
         Write-Host "[-] Remove 'msDS-AllowedToActOnBehalfOfOtherIdentity' `
-         attribute on $($computer.DistinguishedName)" -ForegroundColor Red
+         attribute on $($computer.Name)" -ForegroundColor Red
     }
 
     # List of legitimate computers that must be kept
@@ -128,7 +128,7 @@ function Repair-RBCD {
 
             # Apply the modified security descriptor back to the computer object
             Set-ADComputer $computer -Replace @{nTSecurityDescriptor=$ace}
-            Write-Host "[-] Removed GenericWrite on $($computer.DistinguishedName)" -ForegroundColor Red
+            Write-Host "[-] Removed GenericWrite on $($computer.Name)" -ForegroundColor Red
 
             # Creating the GenericAll permission to a user on a computer
             $identity = New-Object System.Security.Principal.NTAccount($Item)
@@ -141,7 +141,7 @@ function Repair-RBCD {
 
             # Apply the modified security descriptor back to the computer object
             Set-ADComputer $computer -Replace @{nTSecurityDescriptor=$ace}
-            Write-Host "[-] Removed GenericAll on $($computer.DistinguishedName)" -ForegroundColor Red
+            Write-Host "[-] Removed GenericAll on $($computer.Name)" -ForegroundColor Red
         }
     }
 
@@ -157,9 +157,9 @@ function Repair-RBCD {
     foreach ($computer in $computers) {
         # if not in the whitelist, delete the computer object
         if ($legit_computers -notcontains $computer.Name.ToLower()) {
-            Write-Host "[-] Deleting $($computer.Name)" -ForegroundColor Red
             Remove-ADComputer -Identity $computer.DistinguishedName `
                 -Confirm:$false
+            Write-Host "[-] Deleting $($computer.Name)" -ForegroundColor Red
         } else {
             Write-Host "[!] Keeping $($computer.Name)" -ForegroundColor Yellow
         }
