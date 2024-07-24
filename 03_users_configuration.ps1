@@ -28,6 +28,7 @@ foreach ($Item in $UserList) {
          ${Item}: " -AsSecureString -MaskInput 
         New-ADUser -Name $Item -AccountPassword $SecurePassword `
          -Enabled $True
+        Write-Host "[+] New user $($Item) created" -ForegroundColor Green
 
 }
 
@@ -36,9 +37,13 @@ foreach ($Item in $UserList) {
 Set-ADUser $UserList[0] `
  -ServicePrincipalNames @{Add="HTTP/FAKE01.ADTEST.LOCAL"}
 
+Write-Host "[+] Add Service Principal Name to $($UserList[0])" -ForegroundColor Green
+
 # Deactivate pre-authentication for u_asreproasting user
 
 Set-ADAccountControl -DoesNotRequirePreAuth $True -Identity $UserList[1]
+
+Write-Host "[-] Deactivate pre-authentication for $($UserList[1]) user" -ForegroundColor Red
 
 ### Add GenericWrite for u_generic user on DC01
 Import-Module ActiveDirectory
@@ -61,3 +66,5 @@ $ace.AddAccessRule($accessRule)
 
 # Apply the modified security descriptor back to the computer object
 Set-ADComputer $computerName -Replace @{nTSecurityDescriptor=$ace}
+
+Write-Host "[+] Add generic write on DC01 for $(UserList[2]) user" -ForegroundColor Green
