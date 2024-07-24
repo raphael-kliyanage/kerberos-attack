@@ -16,6 +16,12 @@ $domainName = "EXAM.LOCAL"
 $domainNetBIOSName = "EXAM"
 $mode = "WinThreshold"
 
+Write-Host "This script will install several features:"
+Write-Host "[+] AD DS role will be installed"
+Write-Host "[+] DNS role will be installed"
+Write-Host "[+] Server will be promoted to domain controller"
+Write-Host "[!] Server will restart after installing roles"
+
 ### Install AD DS and DNS roles
 Install-WindowsFeature -Name AD-Domain-Services,DNS -IncludeManagementToo
 
