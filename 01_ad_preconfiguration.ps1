@@ -26,27 +26,27 @@ $interface_name = Read-Host "Select the Name of the interface to configure (e.g.
 # Remove the static ip
 Remove-NetIPAddress -InterfaceAlias $interface_name -Confirm:$false
 
-Write-Host "[-] Static IP removed"
+Write-Host "[-] Static IP removed" -ForegroundColor Red
 
 # Remove the default gateway
 Remove-NetRoute -InterfaceAlias $interface_name - -Confirm:$false
 
-Write-Host "[-] Default gateway removed"
+Write-Host "[-] Default gateway removed" -ForegroundColor Red
 
 # configuring new static IPv4
 New-NetIPAddress -InterfaceAlias $interface_name -AddressFamily IPv4 -IPAddress $ip_addr -PrefixLength $cidr -DefaultGateway $gateway -Confirm:$false -Verbose
 
-Write-Host "[+] Static IP address $($ip_addr) set"
+Write-Host "[+] Static IP address $($ip_addr) set" -ForegroundColor Green
 
 # configuring new static DNS for IPv4
 Set-DnsClientServerAddress -InterfaceAlias $interface_name -ServerAddresses $dns -Confirm:$false
 
-Write-Host "[+] DNS $($dns) set"
+Write-Host "[+] DNS $($dns) set" -ForegroundColor Green
 
 # IPv6
 Disable-NetAdapterBinding -Name "*" -ComponentID ms_tcpip6 -Confirm:$false
 
-Write-Host "[-] IPv6 disabled"
+Write-Host "[-] IPv6 disabled" -ForegroundColor Red
 
 # choose to either rename or rename and join a domain in one go
 $renaming = 0

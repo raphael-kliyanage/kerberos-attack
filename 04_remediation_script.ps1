@@ -23,7 +23,7 @@ function Repair-Asreproasting {
     Get-ADUser -Filter 'DoesNotRequirePreAuth -eq $True' `
     | Set-ADAccountControl -DoesNotRequirePreAuth $False
 
-    Write-Host "[-] Pre-authentication deactivated for each users"
+    Write-Host "[-] Pre-authentication deactivated for each users" -ForegroundColor Red
 
     Exit
 }
@@ -51,7 +51,7 @@ function Repair-Kerberoasting {
     Add-ADFineGrainedPasswordPolicySubject "PSO_AdminPasswordPolicy" `
      -Subjects "Admins du domaine"
 
-    Write-Host "[+] Adminisatrator PSO created and applied!"
+    Write-Host "[+] Adminisatrator PSO created and applied!" -ForegroundColor Green
     
     # List all Password Settings Object
 
@@ -59,7 +59,7 @@ function Repair-Kerberoasting {
 
     # Importing GPOs to apply a general and modern password policy
     # Only domain admins can add computers to the domain
-    Write-Host "[!] Importing ANSSI compliant GPOs..."
+    Write-Host "[!] Importing ANSSI compliant GPOs..." -ForegroundColor Yellow
     Import-GPO -BackupGpoName 'Default Domain Policy' `
      -TargetName 'Default Domain Policy' `
      -path '.\gpo' `
@@ -71,13 +71,13 @@ function Repair-Kerberoasting {
      -CreateIfNeeded:$true `
      -Confirm:$false
 
-    Write-Host "[+] 2 ANSSI complaint GPOs imported successfuly!"
+    Write-Host "[+] 2 ANSSI complaint GPOs imported successfuly!" -ForegroundColor Green
 
     # Applying the new GPOs
     gpupdate /force
 
-    Write-Host "[+] New GPOs enforced!"
-    Write-Host "[!] Reboot the device to apply printer spooler GPO."
+    Write-Host "[+] New GPOs enforced!" -ForegroundColor Green
+    Write-Host "[!] Reboot the device to apply printer spooler GPO." -ForegroundColor Yellow
 
     Exit
 }
@@ -91,8 +91,8 @@ function Repair-RBCD {
     foreach ($computer in $computers) {
         Set-ADComputer -Identity $computer.DistinguishedName `
             -Clear "msDS-AllowedToActOnBehalfOfOtherIdentity"
-        Write-Host "[-] Removed 'msDS-AllowedToActOnBehalfOfOtherIdentity'
-            attribute on $($computer.DistinguishedName)"
+        Write-Host "[-] Remove 'msDS-AllowedToActOnBehalfOfOtherIdentity' `
+         attribute on $($computer.DistinguishedName)" -ForegroundColor Red
     }
 
     # List of legitimate computers that must be kept
@@ -128,7 +128,7 @@ function Repair-RBCD {
 
             # Apply the modified security descriptor back to the computer object
             Set-ADComputer $computer -Replace @{nTSecurityDescriptor=$ace}
-            Write-Host "[-] Removed GenericWrite on $($computer.DistinguishedName)"
+            Write-Host "[-] Removed GenericWrite on $($computer.DistinguishedName)" -ForegroundColor Red
 
             # Creating the GenericAll permission to a user on a computer
             $identity = New-Object System.Security.Principal.NTAccount($Item)
@@ -141,14 +141,14 @@ function Repair-RBCD {
 
             # Apply the modified security descriptor back to the computer object
             Set-ADComputer $computer -Replace @{nTSecurityDescriptor=$ace}
-            Write-Host "[-] Removed GenericAll on $($computer.DistinguishedName)"
+            Write-Host "[-] Removed GenericAll on $($computer.DistinguishedName)" -ForegroundColor Red
         }
     }
 
     # Adding priviledged users in the "Protected Users" group
     foreach ($admin in $AdminList) {
         Add-ADGroupMember -Identity "Protected Users" -Members $admin
-        Write-Host "[+] $admin added to `"Protected Users`" group"
+        Write-Host "[+] $admin added to `"Protected Users`" group" -ForegroundColor Green
     }
 
     # For safety reason (in the event of failures in the scripts)
@@ -157,11 +157,11 @@ function Repair-RBCD {
     foreach ($computer in $computers) {
         # if not in the whitelist, delete the computer object
         if ($legit_computers -notcontains $computer.Name.ToLower()) {
-            Write-Host "[-] Deleting $($computer.Name)"
+            Write-Host "[-] Deleting $($computer.Name)" -ForegroundColor Red
             Remove-ADComputer -Identity $computer.DistinguishedName `
                 -Confirm:$false
         } else {
-            Write-Host "[!] Keeping $($computer.Name)"
+            Write-Host "[!] Keeping $($computer.Name)" -ForegroundColor Yellow
         }
     }
 
