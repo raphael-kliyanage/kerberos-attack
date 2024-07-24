@@ -23,6 +23,8 @@ function Repair-Asreproasting {
     Get-ADUser -Filter 'DoesNotRequirePreAuth -eq $True' `
     | Set-ADAccountControl -DoesNotRequirePreAuth $False
 
+    Write-Host "[-] Pre-authentication deactivated for each users"
+
     Exit
 }
 
@@ -49,13 +51,15 @@ function Repair-Kerberoasting {
     Add-ADFineGrainedPasswordPolicySubject "PSO_AdminPasswordPolicy" `
      -Subjects "Admins du domaine"
 
+    Write-Host "[+] Adminisatrator PSO created and applied!"
+    
     # List all Password Settings Object
 
     Get-ADFineGrainedPasswordPolicy -Filter *
 
     # Importing GPOs to apply a general and modern password policy
     # Only domain admins can add computers to the domain
-    Write-Host "Importing GPOs..."
+    Write-Host "[!] Importing ANSSI compliant GPOs..."
     Import-GPO -BackupGpoName 'Default Domain Policy' `
      -TargetName 'Default Domain Policy' `
      -path '.\gpo' `
@@ -67,8 +71,13 @@ function Repair-Kerberoasting {
      -CreateIfNeeded:$true `
      -Confirm:$false
 
+    Write-Host "[+] 2 ANSSI complaint GPOs imported successfuly!"
+
     # Applying the new GPOs
     gpupdate /force
+
+    Write-Host "[+] New GPOs enforced!"
+    Write-Host "[!] Reboot the device to apply printer spooler GPO."
 
     Exit
 }
@@ -82,6 +91,8 @@ function Repair-RBCD {
     foreach ($computer in $computers) {
         Set-ADComputer -Identity $computer.DistinguishedName `
             -Clear "msDS-AllowedToActOnBehalfOfOtherIdentity"
+        Write-Host "[-] Removed 'msDS-AllowedToActOnBehalfOfOtherIdentity'
+            attribute on $($computer.DistinguishedName)"
     }
 
     # List of legitimate computers that must be kept
@@ -117,6 +128,7 @@ function Repair-RBCD {
 
             # Apply the modified security descriptor back to the computer object
             Set-ADComputer $computer -Replace @{nTSecurityDescriptor=$ace}
+            Write-Host "[-] Removed GenericWrite on $($computer.DistinguishedName)"
 
             # Creating the GenericAll permission to a user on a computer
             $identity = New-Object System.Security.Principal.NTAccount($Item)
@@ -129,12 +141,14 @@ function Repair-RBCD {
 
             # Apply the modified security descriptor back to the computer object
             Set-ADComputer $computer -Replace @{nTSecurityDescriptor=$ace}
+            Write-Host "[-] Removed GenericAll on $($computer.DistinguishedName)"
         }
     }
 
     # Adding priviledged users in the "Protected Users" group
     foreach ($admin in $AdminList) {
         Add-ADGroupMember -Identity "Protected Users" -Members $admin
+        Write-Host "[+] $admin added to `"Protected Users`" group"
     }
 
     # For safety reason (in the event of failures in the scripts)
@@ -143,11 +157,11 @@ function Repair-RBCD {
     foreach ($computer in $computers) {
         # if not in the whitelist, delete the computer object
         if ($legit_computers -notcontains $computer.Name.ToLower()) {
-            Write-Host "Deleting computer: $($computer.Name)"
+            Write-Host "[-] Deleting $($computer.Name)"
             Remove-ADComputer -Identity $computer.DistinguishedName `
                 -Confirm:$false
         } else {
-            Write-Host "Keeping computer: $($computer.Name)"
+            Write-Host "[!] Keeping $($computer.Name)"
         }
     }
 
@@ -171,7 +185,7 @@ function Main {
             2 { Repair-Kerberoasting; $quit = 1 }
             3 { Repair-RBCD; $quit = 1 }
             4 { Exit; $quit = 1  }
-            Default { Write-Output "Please select a number displayed on the screen" }
+            Default { Write-Output "/!\ Please select a number displayed on the screen" }
         }
     }
 }
