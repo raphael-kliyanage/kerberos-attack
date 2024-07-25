@@ -25,7 +25,13 @@ function Repair-Asreproasting {
 
     Write-Host "[-] Pre-authentication deactivated for each users" -ForegroundColor Red
 
-    Exit
+    # resetting u_asreproast's password
+    $NewPassword = (Read-Host -Prompt "Provide New Password" -AsSecureString)
+    Set-ADAccountPassword -Identity "u_asreproast" -NewPassword $NewPassword -Reset
+
+    Write-Host "[+] Changed password for u_asreproast" -ForegroundColor Green
+
+    Break
 }
 
 function Repair-Kerberoasting {
@@ -79,7 +85,13 @@ function Repair-Kerberoasting {
     Write-Host "[+] New GPOs enforced!" -ForegroundColor Green
     Write-Host "[!] Reboot the device to apply printer spooler GPO." -ForegroundColor Yellow
 
-    Exit
+    # resetting u_kerberoast password
+    $NewPassword = (Read-Host -Prompt "Provide New Password" -AsSecureString)
+    Set-ADAccountPassword -Identity "u_kerberoast" -NewPassword $NewPassword -Reset
+
+    Write-Host "[+] Changed password for u_kerberoast" -ForegroundColor Green
+
+    Break
 }
 
 function Repair-RBCD {
@@ -164,7 +176,13 @@ function Repair-RBCD {
         }
     }
 
-    Exit
+    # resetting u_generic password
+    $NewPassword = (Read-Host -Prompt "Provide New Password" -AsSecureString)
+    Set-ADAccountPassword -Identity "u_generic" -NewPassword $NewPassword -Reset
+
+    Write-Host "[+] Changed password for u_generic" -ForegroundColor Green
+
+    Break
 }
 function Main {
     [String[]] $MainMenu = @(
