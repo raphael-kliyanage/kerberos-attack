@@ -67,4 +67,4 @@ $ace.AddAccessRule($accessRule)
 # Apply the modified security descriptor back to the computer object
 Set-ADComputer $computerName -Replace @{nTSecurityDescriptor=$ace}
 
-Write-Host "[+] Add generic write on DC01 for $(UserList[2]) user" -ForegroundColor Green
+Write-Host "[+] Add generic write on DC01 for $($UserList[2]) user" -ForegroundColor Green
